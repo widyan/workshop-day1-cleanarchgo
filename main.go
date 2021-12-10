@@ -19,6 +19,7 @@ import (
 	"github.com/sangianpatrick/devoria-article-service/config"
 	"github.com/sangianpatrick/devoria-article-service/crypto"
 	"github.com/sangianpatrick/devoria-article-service/domain/account"
+	"github.com/sangianpatrick/devoria-article-service/domain/article"
 	"github.com/sangianpatrick/devoria-article-service/jwt"
 	"github.com/sangianpatrick/devoria-article-service/middleware"
 	"github.com/sangianpatrick/devoria-article-service/session"
@@ -54,6 +55,10 @@ func main() {
 	accountRepository := account.NewAccountRepository(db, "account")
 	accountUsecase := account.NewAccountUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, accountRepository)
 	account.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, accountUsecase)
+
+	articleRepository := article.NewArticleRepository(db, "article")
+	articleUsecase := article.NewArticleUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, articleRepository)
+	article.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, articleUsecase)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.App.Port),
