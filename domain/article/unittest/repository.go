@@ -25,3 +25,13 @@ func (d *MockNewArticleRepository) Delete(ctx context.Context, ID int64) (err er
 	args := d.Called(ctx, ID)
 	return args.Error(0)
 }
+
+func (d *MockNewArticleRepository) SetArticleStatus(ctx context.Context, ID int64, status string) (err error) {
+	args := d.Called(ctx, ID, status)
+	return args.Error(0)
+}
+
+func (d *MockNewArticleRepository) FindByID(ctx context.Context, ID int64) (articles article.Article, err error) {
+	args := d.Called(ctx, ID)
+	return args.Get(0).(article.Article), args.Error(1)
+}
