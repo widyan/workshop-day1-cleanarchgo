@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/sangianpatrick/devoria-article-service/entity"
 	"time"
 
 	"github.com/sangianpatrick/devoria-article-service/crypto"
@@ -18,7 +19,7 @@ import (
 type AccountUsecase interface {
 	Register(ctx context.Context, params AccountRegistrationRequest) (resp response.Response)
 	Login(ctx context.Context, params AccountAuthenticationRequest) (resp response.Response)
-	GetProfile(ctx context.Context) (resp response.Response)
+	GetProfile(ctx context.Context, claims entity.AccountStandardJWTClaims) (resp response.Response)
 }
 
 type accountUsecaseImpl struct {
@@ -66,11 +67,11 @@ func (u *accountUsecaseImpl) Register(ctx context.Context, params AccountRegistr
 	fmt.Println("len", len(u.generateBase64String(8)))
 	fmt.Println(u.globalIV)
 	_, err := u.repository.FindByEmail(ctx, params.Email)
-	if err == nil {
+	if err != nil {
 		return response.Error(response.StatusConflicted, nil, exception.ErrConflicted)
 	}
 
-	if err != exception.ErrNotFound {
+	if err == exception.ErrNotFound {
 		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
 	}
 	encryptedPassword := u.crypto.Encrypt(params.Password, u.globalIV)
@@ -87,7 +88,7 @@ func (u *accountUsecaseImpl) Register(ctx context.Context, params AccountRegistr
 	}
 	newAccount.ID = ID
 
-	claims := AccountStandardJWTClaims{}
+	claims := entity.AccountStandardJWTClaims{}
 	claims.Email = newAccount.Email
 	claims.Subject = fmt.Sprintf("%d", newAccount.ID)
 	claims.IssuedAt = time.Now().Unix()
@@ -130,14 +131,14 @@ func (u *accountUsecaseImpl) Login(ctx context.Context, params AccountAuthentica
 		return response.Error(response.StatusInvalidPayload, nil, exception.ErrBadRequest)
 	}
 
-	claims := AccountStandardJWTClaims{}
+	claims := entity.AccountStandardJWTClaims{}
 	claims.Email = account.Email
 	claims.Subject = fmt.Sprintf("%d", account.ID)
 	claims.IssuedAt = time.Now().Unix()
 	claims.ExpiresAt = time.Now().Add(time.Hour * 24 * 1).Unix()
 
 	token, err := u.jsonWebToken.Sign(ctx, claims)
-	if err == nil {
+	if err != nil {
 		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
 	}
 
@@ -158,11 +159,16 @@ func (u *accountUsecaseImpl) Login(ctx context.Context, params AccountAuthentica
 
 	return response.Success(response.StatusOK, accountAuthenticationResponse)
 }
-func (u *accountUsecaseImpl) GetProfile(ctx context.Context) (resp response.Response) {
-	account, ok := ctx.Value(AccountContextKey{}).(Account)
-	if !ok {
-		return response.Error(response.StatusUnauthorized, nil, exception.ErrUnauthorized)
-	}
+func (u *accountUsecaseImpl) GetProfile(ctx context.Context, claims entity.AccountStandardJWTClaims) (resp response.Response) {
 
-	return response.Success(response.StatusOK, account)
+	account, err := u.repository.FindByEmail(ctx, claims.Email)
+	if err != nil {
+		return response.Error(response.StatusUnexpectedError, nil, exception.ErrInternalServer)
+	}
+	newAccount := Account{}
+	newAccount.ID = account.ID
+	newAccount.Email = account.Email
+	newAccount.FirstName = account.FirstName
+	newAccount.LastName = account.LastName
+	return response.Success(response.StatusOK, newAccount)
 }
