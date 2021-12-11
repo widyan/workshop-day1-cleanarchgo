@@ -2,8 +2,6 @@ package account
 
 import (
 	"time"
-
-	"github.com/dgrijalva/jwt-go"
 )
 
 const AccountSessionKeyFormat = "account:session:%s"
@@ -19,10 +17,4 @@ type Account struct {
 	LastName       string     `json:"lastName"`
 	CreatedAt      time.Time  `json:"createdAt"`
 	LastModifiedAt *time.Time `json:"lastModifiedAt"`
-}
-
-// CustomerStandardJWTClaims is a model.
-type AccountStandardJWTClaims struct {
-	jwt.StandardClaims
-	Email string `json:"email"`
 }

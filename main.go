@@ -48,12 +48,13 @@ func main() {
 	jsonWebToken := jwt.NewJSONWebToken(jwt.GetRSAPrivateKey("./secret/id_rsa"), jwt.GetRSAPublicKey("./secret/id_rsa.pub"))
 	sess := session.NewRedisSessionStoreAdapter(rc, time.Hour*24*1)
 	basicAuthMiddleware := middleware.NewBasicAuth(cfg.BasicAuth.Username, cfg.BasicAuth.Password)
+	jwtAuthMiddleware := jwt.NewJwtToken(jsonWebToken)
 
 	router := mux.NewRouter()
 
 	accountRepository := account.NewAccountRepository(db, "account")
 	accountUsecase := account.NewAccountUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, accountRepository)
-	account.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, accountUsecase)
+	account.NewAccountHTTPHandler(router, basicAuthMiddleware,jwtAuthMiddleware, vld, accountUsecase)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.App.Port),
