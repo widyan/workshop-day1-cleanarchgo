@@ -56,7 +56,7 @@ func main() {
 	accountUsecase := account.NewAccountUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, accountRepository)
 	account.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, accountUsecase)
 
-	articleRepository := article.NewArticleRepository(db, "article")
+	articleRepository := article.NewArticleRepository(db, "article", location)
 	articleUsecase := article.NewArticleUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, articleRepository)
 	article.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, articleUsecase)
 

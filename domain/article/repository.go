@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 )
 
 type ArticleRepository interface {
@@ -19,12 +20,14 @@ type ArticleRepository interface {
 type articleRepositoryImpl struct {
 	db        *sql.DB
 	tableName string
+	location  *time.Location
 }
 
-func NewArticleRepository(db *sql.DB, tableName string) ArticleRepository {
+func NewArticleRepository(db *sql.DB, tableName string, location *time.Location) ArticleRepository {
 	return &articleRepositoryImpl{
 		db:        db,
 		tableName: tableName,
+		location:  location,
 	}
 }
 
@@ -44,7 +47,7 @@ func (r *articleRepositoryImpl) Save(ctx context.Context, article Article) (ID i
 		article.Subtitle,
 		article.Content,
 		article.Status,
-		article.CreatedAt,
+		time.Now().In(r.location),
 	)
 
 	if err != nil {

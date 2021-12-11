@@ -13,7 +13,7 @@ import (
 )
 
 type ArticleUsecase interface {
-	Save(ctx context.Context, request CreateArticleRequest) (resp response.Response)
+	Save(ctx context.Context, AuthorID int64, request CreateArticleRequest) (resp response.Response)
 	Update(ctx context.Context, request UpdateArticleRequest) (resp response.Response)
 	Delete(ctx context.Context, ID int64) (resp response.Response)
 }
@@ -45,15 +45,13 @@ func NewArticleUsecase(
 	}
 }
 
-func (u *articleUsecaseImpl) Save(ctx context.Context, article CreateArticleRequest) (resp response.Response) {
-	createdAt := time.Now().In(u.location)
+func (u *articleUsecaseImpl) Save(ctx context.Context, AuthorID int64, article CreateArticleRequest) (resp response.Response) {
 	_, err := u.repository.Save(ctx, Article{
-		Title:     article.Title,
-		Subtitle:  article.Subtitle,
-		Content:   article.Content,
-		CreatedAt: createdAt,
+		Title:    article.Title,
+		Subtitle: article.Subtitle,
+		Content:  article.Content,
 		Author: account.Account{
-			ID: 13,
+			ID: AuthorID,
 		},
 	})
 	if err != nil {
