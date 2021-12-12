@@ -55,11 +55,11 @@ func main() {
 
 	accountRepository := account.NewAccountRepository(db, "account")
 	accountUsecase := account.NewAccountUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, accountRepository)
-	account.NewAccountHTTPHandler(router, basicAuthMiddleware,jwtAuthMiddleware, vld, accountUsecase)
+	account.NewAccountHTTPHandler(router, basicAuthMiddleware, jwtAuthMiddleware, vld, accountUsecase)
 
 	articleRepository := article.NewArticleRepository(db, "article", location)
-	articleUsecase := article.NewArticleUsecase(cfg.GlobalIV, sess, jsonWebToken, encryption, location, articleRepository)
-	article.NewAccountHTTPHandler(router, basicAuthMiddleware, vld, articleUsecase)
+	articleUsecase := article.NewArticleUsecase(sess, location, articleRepository)
+	article.NewAccountHTTPHandler(router, basicAuthMiddleware, jwtAuthMiddleware, vld, articleUsecase)
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.App.Port),
